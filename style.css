@@ -2,21 +2,23 @@
    Daily Habit Tracker - Natural, Human-Made Editorial Design
    Crafted with warm paper tones, earthy accents, and tactile controls.
    No emojis. No AI-style glowing gradients. Pure artisanal clarity.
+   Includes dedicated dark mode (.dark-mode) class with warm night tones.
    ========================================================================== */
 
 :root {
-  /* Surface & Paper Tones */
+  /* Surface & Paper Tones (Daylight / Natural Linen) */
   --color-page-bg: #f5f2eb;
   --color-card-bg: #ffffff;
   --color-surface-subtle: #f9f7f2;
   --color-surface-muted: #ece7dc;
+  --color-surface-hover: #fbf9f4;
 
-  /* Borders & Lines */
+  /* Borders & Dividers */
   --color-border-subtle: #e8e2d5;
   --color-border-medium: #d8cfbf;
   --color-border-strong: #b8ac99;
 
-  /* Typography / Ink Tones */
+  /* Ink & Typography */
   --color-ink-primary: #231f1c;
   --color-ink-secondary: #655e55;
   --color-ink-muted: #958d82;
@@ -24,6 +26,7 @@
   /* Natural Earth Accents */
   --color-espresso: #25201d;
   --color-espresso-hover: #14110f;
+  --color-espresso-text: #ffffff;
   
   --color-sage: #385e43;
   --color-sage-hover: #2b4934;
@@ -54,6 +57,43 @@
   --transition-smooth: 0.25s ease;
 }
 
+/* ==========================================================================
+   Dark Mode Theme Class (.dark-mode)
+   Warm night paper & dark slate tones - relaxing, natural, and authentic.
+   ========================================================================== */
+body.dark-mode {
+  --color-page-bg: #141210;
+  --color-card-bg: #1f1c19;
+  --color-surface-subtle: #27231f;
+  --color-surface-muted: #342f29;
+  --color-surface-hover: #2d2823;
+
+  --color-border-subtle: #332d26;
+  --color-border-medium: #473f35;
+  --color-border-strong: #665b4d;
+
+  --color-ink-primary: #f0ece3;
+  --color-ink-secondary: #b5ac9d;
+  --color-ink-muted: #7d7568;
+
+  --color-espresso: #eee8de;
+  --color-espresso-hover: #ffffff;
+  --color-espresso-text: #1a1714;
+
+  --color-sage: #508660;
+  --color-sage-hover: #619d73;
+  --color-sage-soft: #1d2c20;
+  --color-sage-border: #2e4b35;
+
+  --color-clay: #d66c58;
+  --color-clay-hover: #e2806e;
+  --color-clay-soft: #331f1b;
+  --color-clay-border: #56312a;
+
+  --shadow-card: 0 6px 28px -2px rgba(0, 0, 0, 0.5), 0 2px 6px 0 rgba(0, 0, 0, 0.3);
+  --shadow-subtle: 0 2px 8px -1px rgba(0, 0, 0, 0.4);
+}
+
 /* ---------- Global Reset & Body ---------- */
 *,
 *::before,
@@ -75,9 +115,9 @@ body {
   padding: 48px 18px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-smooth), color var(--transition-smooth);
 }
 
-/* Background subtle natural paper grain vibe */
 .page-wrapper {
   width: 100%;
   max-width: 580px;
@@ -92,29 +132,81 @@ body {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-subtle);
   box-shadow: var(--shadow-card);
-  padding: 34px 32px 28px;
+  padding: 30px 32px 28px;
   position: relative;
+  transition: background-color var(--transition-smooth), border-color var(--transition-smooth), box-shadow var(--transition-smooth);
 }
 
 /* ---------- Header ---------- */
 .tracker-header {
-  text-align: center;
-  margin-bottom: 26px;
+  margin-bottom: 24px;
+}
+
+/* Header Top Row: Date badge + Dark Mode Toggle */
+.header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
 .date-pill {
   display: inline-block;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-ink-secondary);
   background: var(--color-surface-subtle);
   border: 1px solid var(--color-border-subtle);
-  padding: 5px 13px;
+  padding: 5px 12px;
   border-radius: 999px;
-  margin-bottom: 12px;
+}
+
+/* Tactile Dark Mode Button */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform 0.08s ease;
+  user-select: none;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-ink-primary);
+  border-color: var(--color-border-medium);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.97);
+}
+
+.theme-icon-sun {
+  display: none;
+}
+
+.theme-icon-moon {
+  display: block;
+}
+
+body.dark-mode .theme-icon-sun {
+  display: block;
+}
+
+body.dark-mode .theme-icon-moon {
+  display: none;
 }
 
 .tracker-title {
@@ -124,6 +216,7 @@ body {
   color: var(--color-ink-primary);
   letter-spacing: -0.01em;
   line-height: 1.25;
+  text-align: center;
   margin-bottom: 6px;
 }
 
@@ -132,6 +225,7 @@ body {
   color: var(--color-ink-secondary);
   max-width: 420px;
   margin: 0 auto;
+  text-align: center;
 }
 
 /* ---------- Progress Section ---------- */
@@ -141,6 +235,7 @@ body {
   border-radius: var(--radius-md);
   padding: 16px 18px;
   margin-bottom: 22px;
+  transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
 }
 
 .progress-meta {
@@ -169,6 +264,7 @@ body {
   background: var(--color-surface-muted);
   border-radius: 999px;
   overflow: hidden;
+  transition: background-color var(--transition-smooth);
 }
 
 .progress-fill {
@@ -196,11 +292,11 @@ body {
   font-family: var(--font-sans);
   font-size: 14px;
   color: var(--color-ink-primary);
-  background: #ffffff;
+  background: var(--color-card-bg);
   border: 1px solid var(--color-border-medium);
   border-radius: var(--radius-sm);
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-smooth), color var(--transition-smooth);
 }
 
 .habit-form input::placeholder {
@@ -210,6 +306,10 @@ body {
 .habit-form input:focus {
   border-color: var(--color-espresso);
   box-shadow: 0 0 0 3px rgba(37, 32, 29, 0.08);
+}
+
+body.dark-mode .habit-form input:focus {
+  box-shadow: 0 0 0 3px rgba(238, 232, 222, 0.12);
 }
 
 /* ---------- Natural Handcrafted Buttons ---------- */
@@ -225,7 +325,7 @@ body {
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform 0.08s ease;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform 0.08s ease;
   user-select: none;
 }
 
@@ -233,10 +333,10 @@ body {
   transform: scale(0.98);
 }
 
-/* Primary Button: Solid natural espresso */
+/* Primary Button: Solid natural tactile button */
 .btn-primary {
   background: var(--color-espresso);
-  color: #ffffff;
+  color: var(--color-espresso-text);
   border-color: var(--color-espresso);
 }
 
@@ -256,7 +356,7 @@ body {
 }
 
 .btn-toggle:hover {
-  background: #ffffff;
+  background: var(--color-card-bg);
   color: var(--color-ink-primary);
   border-color: var(--color-border-strong);
 }
@@ -268,7 +368,7 @@ body {
 }
 
 .habit-item.is-done .btn-toggle:hover {
-  background: #ffffff;
+  background: var(--color-card-bg);
   color: var(--color-ink-secondary);
   border-color: var(--color-border-medium);
 }
@@ -353,12 +453,12 @@ body {
   background: var(--color-surface-subtle);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
-  transition: background var(--transition-smooth), border-color var(--transition-smooth), transform var(--transition-fast);
+  transition: background-color var(--transition-smooth), border-color var(--transition-smooth), transform var(--transition-fast);
 }
 
 .habit-item:hover {
   border-color: var(--color-border-medium);
-  background: #fbf9f4;
+  background: var(--color-surface-hover);
 }
 
 /* Tactile Checkbox Toggle */
@@ -368,7 +468,7 @@ body {
   flex-shrink: 0;
   border-radius: 50%;
   border: 1.5px solid var(--color-border-strong);
-  background: #ffffff;
+  background: var(--color-card-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -441,7 +541,7 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--color-card-bg);
   border: 1px solid var(--color-border-subtle);
   display: inline-flex;
   align-items: center;
@@ -513,11 +613,16 @@ body {
   }
 
   .tracker-card {
-    padding: 24px 18px 20px;
+    padding: 22px 18px 20px;
   }
 
   .tracker-title {
     font-size: 24px;
+  }
+
+  .header-top-row {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .habit-form {

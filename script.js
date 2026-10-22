@@ -3,6 +3,97 @@
 // Clean, reliable vanilla JavaScript without emojis or artificial gimmicks.
 // ==========================================================================
 
+// ==========================================================================
+// ThemeManager Class
+// Manages dark mode toggling, accessibility attributes, and localStorage persistence.
+// ==========================================================================
+class ThemeManager {
+  constructor() {
+    this.storageKey = "dailyHabits_theme";
+    this.toggleBtn = null;
+    this.toggleText = null;
+  }
+
+  init() {
+    this.toggleBtn = document.getElementById("themeToggleBtn");
+    this.toggleText = document.getElementById("themeToggleText");
+
+    var savedTheme = null;
+    try {
+      savedTheme = localStorage.getItem(this.storageKey);
+    } catch (e) {
+      console.warn("Storage access not available for theme", e);
+    }
+
+    var prefersDark = false;
+    try {
+      prefersDark = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    } catch (e) {
+      prefersDark = false;
+    }
+
+    var isDark = savedTheme ? savedTheme === "dark" : prefersDark;
+    this.applyTheme(isDark);
+
+    if (this.toggleBtn) {
+      var self = this;
+      this.toggleBtn.onclick = function (e) {
+        if (e) e.preventDefault();
+        self.toggle();
+      };
+    }
+
+    // Follow OS color scheme changes if user hasn't explicitly set a preference
+    try {
+      if (window.matchMedia) {
+        var self = this;
+        var mq = window.matchMedia("(prefers-color-scheme: dark)");
+        var handler = function (e) {
+          var userPref = null;
+          try {
+            userPref = localStorage.getItem(self.storageKey);
+          } catch (err) {}
+          if (!userPref) {
+            self.applyTheme(e.matches);
+          }
+        };
+        if (mq.addEventListener) {
+          mq.addEventListener("change", handler);
+        } else if (mq.addListener) {
+          mq.addListener(handler);
+        }
+      }
+    } catch (e) {
+      // Ignore media query listener issues
+    }
+  }
+
+  applyTheme(isDark) {
+    if (document.body) {
+      document.body.classList.toggle("dark-mode", isDark);
+    }
+
+    if (this.toggleText) {
+      this.toggleText.textContent = isDark ? "Light Mode" : "Dark Mode";
+    }
+
+    if (this.toggleBtn) {
+      this.toggleBtn.setAttribute("aria-pressed", isDark ? "true" : "false");
+      this.toggleBtn.setAttribute("title", isDark ? "Switch to daylight mode" : "Switch to dark mode");
+    }
+
+    try {
+      localStorage.setItem(this.storageKey, isDark ? "dark" : "light");
+    } catch (e) {}
+  }
+
+  toggle() {
+    var isCurrentlyDark = document.body ? document.body.classList.contains("dark-mode") : false;
+    this.applyTheme(!isCurrentlyDark);
+  }
+}
+
+// ---------- Data State ----------
 var habits = [];
 var currentFilter = "all";
 var STORAGE_KEY = "dailyHabits";
@@ -42,6 +133,7 @@ function updateDateDisplay() {
 // ---------- Habit Actions ----------
 function addHabit() {
   var input = document.getElementById("habitInput");
+  if (!input) return;
   var text = input.value.trim();
   if (text === "") return;
 
@@ -100,6 +192,7 @@ function render() {
   var statPending = document.getElementById("statPending");
   var statRate = document.getElementById("statRate");
 
+  if (!list) return;
   list.innerHTML = "";
 
   // Filter items based on active tab
@@ -195,25 +288,32 @@ function render() {
   }
 
   // Handle empty state visibility & context message
-  if (filteredHabits.length === 0) {
-    emptyMsg.style.display = "block";
-    if (total === 0) {
-      emptyTitle.textContent = "No habits listed yet";
-      emptyDesc.textContent = "Add your first habit above to begin tracking your routine for today.";
-    } else if (currentFilter === "pending") {
-      emptyTitle.textContent = "All habits completed";
-      emptyDesc.textContent = "You have finished every habit scheduled for today.";
-    } else if (currentFilter === "completed") {
-      emptyTitle.textContent = "No completed habits yet";
-      emptyDesc.textContent = "Mark habits as done once you finish them.";
+  if (emptyMsg) {
+    if (filteredHabits.length === 0) {
+      emptyMsg.style.display = "block";
+      if (total === 0) {
+        if (emptyTitle) emptyTitle.textContent = "No habits listed yet";
+        if (emptyDesc) emptyDesc.textContent = "Add your first habit above to begin tracking your routine for today.";
+      } else if (currentFilter === "pending") {
+        if (emptyTitle) emptyTitle.textContent = "All habits completed";
+        if (emptyDesc) emptyDesc.textContent = "You have finished every habit scheduled for today.";
+      } else if (currentFilter === "completed") {
+        if (emptyTitle) emptyTitle.textContent = "No completed habits yet";
+        if (emptyDesc) emptyDesc.textContent = "Mark habits as done once you finish them.";
+      }
+    } else {
+      emptyMsg.style.display = "none";
     }
-  } else {
-    emptyMsg.style.display = "none";
   }
 }
 
-// ---------- Event Listeners ----------
-document.addEventListener("DOMContentLoaded", function () {
+// ---------- Initialization Routine ----------
+function initApp() {
+  // Initialize ThemeManager class
+  var themeManager = new ThemeManager();
+  themeManager.init();
+  window.themeManager = themeManager;
+
   updateDateDisplay();
 
   var form = document.getElementById("habitForm");
@@ -254,4 +354,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadHabits();
   render();
-});
+}
+
+// Ensure execution whether DOM is already loaded or still loading
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
