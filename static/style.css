@@ -504,8 +504,14 @@ body.dark-mode .habit-form input:focus {
   transform: scale(1);
 }
 
-.habit-text {
+.habit-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.habit-text {
   font-size: 14.5px;
   color: var(--color-ink-primary);
   word-break: break-word;
@@ -517,6 +523,20 @@ body.dark-mode .habit-form input:focus {
   text-decoration: line-through;
   text-decoration-thickness: 1.2px;
   color: var(--color-ink-muted);
+}
+
+.habit-timestamp {
+  font-size: 11.5px;
+  color: var(--color-ink-muted);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  transition: color var(--transition-smooth);
+}
+
+.habit-item.is-done .habit-timestamp {
+  color: var(--color-sage);
+  font-weight: 500;
 }
 
 .habit-actions {
@@ -563,6 +583,192 @@ body.dark-mode .habit-form input:focus {
   color: var(--color-ink-secondary);
   max-width: 320px;
   margin: 0 auto;
+}
+
+/* ---------- Next Day Recommendations & Reminder Section ---------- */
+.next-day-section {
+  margin-top: 24px;
+  padding: 20px 22px;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
+}
+
+.next-day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.next-day-tag {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink-secondary);
+  background: var(--color-surface-muted);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.next-day-title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-ink-primary);
+  line-height: 1.3;
+}
+
+.recommendation-box {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-left: 3.5px solid var(--color-sage);
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  margin-bottom: 16px;
+  transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
+}
+
+.recommendation-badge {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-sage);
+  margin-bottom: 4px;
+}
+
+.recommendation-text {
+  font-size: 13.5px;
+  color: var(--color-ink-primary);
+  line-height: 1.45;
+}
+
+.reminder-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reminder-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-ink-primary);
+  letter-spacing: 0.01em;
+}
+
+.reminder-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.reminder-input-row input {
+  flex: 1;
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-ink-primary);
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border-medium);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-smooth);
+}
+
+.reminder-input-row input::placeholder {
+  color: var(--color-ink-muted);
+}
+
+.reminder-input-row input:focus {
+  border-color: var(--color-espresso);
+  box-shadow: 0 0 0 3px rgba(37, 32, 29, 0.08);
+}
+
+body.dark-mode .reminder-input-row input:focus {
+  box-shadow: 0 0 0 3px rgba(238, 232, 222, 0.12);
+}
+
+.btn-secondary {
+  background: var(--color-card-bg);
+  color: var(--color-ink-primary);
+  border: 1px solid var(--color-border-strong);
+  padding: 10px 15px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform 0.08s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--color-surface-muted);
+  border-color: var(--color-ink-primary);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.saved-reminder-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  margin-top: 4px;
+  transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
+}
+
+.saved-reminder-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.saved-reminder-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-muted);
+}
+
+.saved-reminder-text {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-ink-primary);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.btn-clear {
+  background: transparent;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-clay);
+  padding: 5px 9px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+  margin-left: 10px;
+}
+
+.btn-clear:hover {
+  background: var(--color-clay-soft);
+  color: var(--color-clay-hover);
 }
 
 /* ---------- Card Footer / Statistics ---------- */
@@ -646,5 +852,18 @@ body.dark-mode .habit-form input:focus {
   .btn-delete {
     padding: 6px 8px;
     font-size: 12px;
+  }
+
+  .next-day-section {
+    padding: 16px 14px;
+  }
+
+  .reminder-input-row {
+    flex-direction: column;
+  }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 11px;
   }
 }

@@ -91,6 +91,42 @@
         <p class="empty-description" id="emptyDesc">Add your first habit above to begin tracking your routine for today.</p>
       </div>
 
+      <!-- Next Day Recommendation & Reminder Section -->
+      <section class="next-day-section" aria-label="Next day planning and recommendations">
+        <div class="next-day-header">
+          <span class="next-day-tag">Planning Ahead</span>
+          <h2 class="next-day-title">Tomorrow's Focus & Recommendations</h2>
+        </div>
+
+        <!-- Dynamic Contextual Recommendation Box -->
+        <div class="recommendation-box" id="recommendationBox">
+          <div class="recommendation-badge">Daily Recommendation</div>
+          <p class="recommendation-text" id="recommendationText">Loading your recommendation...</p>
+        </div>
+
+        <!-- Next Day Reminder Form -->
+        <form id="reminderForm" class="reminder-form" onsubmit="return false;">
+          <label for="reminderInput" class="reminder-label">Next Day Reminder</label>
+          <div class="reminder-input-row">
+            <input 
+              type="text" 
+              id="reminderInput" 
+              placeholder="Set a focal task or reminder for tomorrow..." 
+              maxlength="80"
+              autocomplete="off"
+            >
+            <button type="submit" id="saveReminderBtn" class="btn btn-secondary">Save Reminder</button>
+          </div>
+          <div id="savedReminderDisplay" class="saved-reminder-display" style="display: none;">
+            <div class="saved-reminder-meta">
+              <span class="saved-reminder-label">Scheduled for Tomorrow:</span>
+              <span class="saved-reminder-text" id="savedReminderText"></span>
+            </div>
+            <button type="button" id="clearReminderBtn" class="btn btn-clear" aria-label="Clear reminder">Remove</button>
+          </div>
+        </form>
+      </section>
+
       <!-- Card Footer Stats -->
       <footer class="tracker-footer">
         <div class="stat-item">

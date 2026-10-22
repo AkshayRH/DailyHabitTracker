@@ -97,6 +97,7 @@ class ThemeManager {
 var habits = [];
 var currentFilter = "all";
 var STORAGE_KEY = "dailyHabits";
+var REMINDER_STORAGE_KEY = "dailyHabits_nextDayReminder";
 
 // ---------- Storage Operations ----------
 function loadHabits() {
@@ -116,7 +117,7 @@ function saveHabits() {
   }
 }
 
-// ---------- Date Display ----------
+// ---------- Date & Time Formatting ----------
 function updateDateDisplay() {
   var dateElement = document.getElementById("currentDate");
   if (!dateElement) return;
@@ -130,6 +131,29 @@ function updateDateDisplay() {
   }
 }
 
+function formatTime(timestamp) {
+  if (!timestamp) return "";
+  var date = new Date(timestamp);
+  var hours = date.getHours();
+  var minutes = date.getMinutes();
+  var ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  minutes = minutes < 10 ? "0" + minutes : minutes;
+  return hours + ":" + minutes + " " + ampm;
+}
+
+function getHabitTimestampText(habit) {
+  if (habit.done && habit.completedAt) {
+    return "Completed at " + formatTime(habit.completedAt);
+  }
+  var created = habit.createdAt || habit.id;
+  if (created) {
+    return "Added at " + formatTime(created);
+  }
+  return "";
+}
+
 // ---------- Habit Actions ----------
 function addHabit() {
   var input = document.getElementById("habitInput");
@@ -137,10 +161,13 @@ function addHabit() {
   var text = input.value.trim();
   if (text === "") return;
 
+  var now = Date.now();
   habits.push({
-    id: Date.now(),
+    id: now,
     text: text,
-    done: false
+    done: false,
+    createdAt: now,
+    completedAt: null
   });
 
   input.value = "";
@@ -152,6 +179,7 @@ function toggleDone(id) {
   for (var i = 0; i < habits.length; i++) {
     if (habits[i].id === id) {
       habits[i].done = !habits[i].done;
+      habits[i].completedAt = habits[i].done ? Date.now() : null;
       break;
     }
   }
@@ -176,6 +204,78 @@ function setFilter(filter) {
     btn.setAttribute("aria-selected", isActive ? "true" : "false");
   });
   render();
+}
+
+// ---------- Next Day Recommendation & Reminder Logic ----------
+function updateRecommendations() {
+  var recText = document.getElementById("recommendationText");
+  if (!recText) return;
+
+  var total = habits.length;
+  var completedCount = habits.filter(function (h) { return h.done; }).length;
+  var pendingCount = total - completedCount;
+
+  if (total === 0) {
+    recText.textContent = "Your list is currently clear. Recommendation for tomorrow: Begin with 1 or 2 small, foundational habits (such as 15 minutes of quiet reading or morning hydration) to start building sustainable daily momentum.";
+  } else if (completedCount === total) {
+    recText.textContent = "Outstanding work: All daily habits have been achieved today. Recommendation for tomorrow: Keep this momentum going by preparing your morning environment tonight so you can begin without friction.";
+  } else if (completedCount === 0) {
+    recText.textContent = "You have " + total + " habits scheduled with none finished yet today. Recommendation for tomorrow: Complete just one high-impact habit first thing tomorrow morning to generate positive forward momentum.";
+  } else {
+    var nextPending = habits.find(function (h) { return !h.done; });
+    var habitName = nextPending ? '"' + nextPending.text + '"' : "your remaining tasks";
+    recText.textContent = "You have finished " + completedCount + " of " + total + " habits today (" + pendingCount + " remaining). Recommendation for tomorrow: Prioritize " + habitName + " before noon tomorrow to stay ahead of your schedule.";
+  }
+}
+
+function saveReminder() {
+  var input = document.getElementById("reminderInput");
+  if (!input) return;
+  var text = input.value.trim();
+  if (text === "") return;
+
+  try {
+    localStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify({
+      text: text,
+      createdAt: Date.now()
+    }));
+  } catch (e) {
+    console.error("Unable to save next day reminder", e);
+  }
+
+  input.value = "";
+  renderReminder();
+}
+
+function clearReminder() {
+  try {
+    localStorage.removeItem(REMINDER_STORAGE_KEY);
+  } catch (e) {
+    console.error("Unable to clear next day reminder", e);
+  }
+  renderReminder();
+}
+
+function renderReminder() {
+  var displayBox = document.getElementById("savedReminderDisplay");
+  var displayText = document.getElementById("savedReminderText");
+  if (!displayBox || !displayText) return;
+
+  var saved = null;
+  try {
+    var raw = localStorage.getItem(REMINDER_STORAGE_KEY);
+    saved = raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    saved = null;
+  }
+
+  if (saved && saved.text) {
+    displayBox.style.display = "flex";
+    displayText.textContent = saved.text;
+  } else {
+    displayBox.style.display = "none";
+    displayText.textContent = "";
+  }
 }
 
 // ---------- Rendering ----------
@@ -217,10 +317,20 @@ function render() {
       toggleDone(habit.id);
     };
 
-    // Habit text
+    // Habit content container (text + timestamp)
+    var contentWrapper = document.createElement("div");
+    contentWrapper.className = "habit-content";
+
     var span = document.createElement("span");
     span.className = "habit-text";
     span.textContent = habit.text;
+
+    var timestampSpan = document.createElement("span");
+    timestampSpan.className = "habit-timestamp";
+    timestampSpan.textContent = getHabitTimestampText(habit);
+
+    contentWrapper.appendChild(span);
+    contentWrapper.appendChild(timestampSpan);
 
     // Action buttons container
     var actions = document.createElement("div");
@@ -249,7 +359,7 @@ function render() {
     actions.appendChild(delBtn);
 
     li.appendChild(checkBtn);
-    li.appendChild(span);
+    li.appendChild(contentWrapper);
     li.appendChild(actions);
     list.appendChild(li);
   });
@@ -305,6 +415,9 @@ function render() {
       emptyMsg.style.display = "none";
     }
   }
+
+  // Update next day recommendations
+  updateRecommendations();
 }
 
 // ---------- Initialization Routine ----------
@@ -352,8 +465,45 @@ function initApp() {
     });
   });
 
+  // Next Day Reminder listeners
+  var reminderForm = document.getElementById("reminderForm");
+  var saveReminderBtn = document.getElementById("saveReminderBtn");
+  var clearReminderBtn = document.getElementById("clearReminderBtn");
+  var reminderInput = document.getElementById("reminderInput");
+
+  if (reminderForm) {
+    reminderForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      saveReminder();
+    });
+  }
+
+  if (saveReminderBtn) {
+    saveReminderBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      saveReminder();
+    });
+  }
+
+  if (reminderInput) {
+    reminderInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        saveReminder();
+      }
+    });
+  }
+
+  if (clearReminderBtn) {
+    clearReminderBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      clearReminder();
+    });
+  }
+
   loadHabits();
   render();
+  renderReminder();
 }
 
 // Ensure execution whether DOM is already loaded or still loading
