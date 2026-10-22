@@ -1,0 +1,165 @@
+/* ---------- Base ---------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f4f6f8;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 16px;
+  color: #2d3748;
+}
+
+/* ---------- Card ---------- */
+.card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 520px;
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+h1 {
+  font-size: 26px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #718096;
+  font-size: 14px;
+  margin-bottom: 22px;
+}
+
+/* ---------- Add habit box ---------- */
+.add-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.add-box input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 15px;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  outline: none;
+}
+
+.add-box input:focus {
+  border-color: #3182ce;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #ffffff;
+  transition: background 0.2s;
+}
+
+.btn-add {
+  background: #3182ce;
+  font-weight: 600;
+  padding: 10px 16px;
+}
+
+.btn-add:hover {
+  background: #2b6cb0;
+}
+
+.btn-done {
+  background: #38a169;
+}
+
+.btn-done:hover {
+  background: #2f855a;
+}
+
+.btn-delete {
+  background: #e53e3e;
+}
+
+.btn-delete:hover {
+  background: #c53030;
+}
+
+/* ---------- Progress ---------- */
+.progress {
+  font-size: 14px;
+  color: #4a5568;
+  margin-bottom: 12px;
+  text-align: right;
+}
+
+/* ---------- Habit list ---------- */
+ul {
+  list-style: none;
+}
+
+.habit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: #edf2f7;          /* gray = not finished */
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  transition: background 0.25s;
+}
+
+.habit-text {
+  flex: 1;
+  font-size: 16px;
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Completed state: green row + strike-through */
+.habit-row.completed {
+  background: #c6f6d5;
+}
+
+.habit-row.completed .habit-text {
+  text-decoration: line-through;
+  color: #276749;
+}
+
+/* ---------- Empty message ---------- */
+.empty {
+  text-align: center;
+  color: #a0aec0;
+  font-size: 14px;
+  padding: 16px 0;
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 480px) {
+  .habit-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .actions {
+    width: 100%;
+  }
+  .actions .btn {
+    flex: 1;
+  }
+}

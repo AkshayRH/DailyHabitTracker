@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Habit Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="card">
+    <h1>Daily Habit Tracker</h1>
+    <p class="subtitle">Track your core goals. Keep it simple.</p>
+
+    <!-- Add habit form -->
+    <div class="add-box">
+      <input type="text" id="habitInput" placeholder="Enter a new habit..." maxlength="60">
+      <button id="addBtn" class="btn btn-add">Add Habit</button>
+    </div>
+
+    <!-- Progress summary -->
+    <p class="progress" id="progressText">0 of 0 habits done</p>
+
+    <!-- Habit list -->
+    <ul id="habitList"></ul>
+
+    <p class="empty" id="emptyMsg">No habits yet. Add your first one above!</p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
