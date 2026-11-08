@@ -96,14 +96,36 @@ class ThemeManager {
 // ---------- Data State ----------
 var habits = [];
 var currentFilter = "all";
+var editingHabitId = null;
 var STORAGE_KEY = "dailyHabits";
 var REMINDER_STORAGE_KEY = "dailyHabits_nextDayReminder";
+
+// ---------- Sorting Operations ----------
+function sortHabitsArray() {
+  habits.sort(function (a, b) {
+    // 1. Unchecked (to-do) habits always come first, Checked (completed) habits last
+    if (a.done !== b.done) {
+      return a.done ? 1 : -1;
+    }
+    // 2. If both are completed, sort by completion timestamp
+    if (a.done && b.done) {
+      var doneA = a.completedAt || a.createdAt || a.id || 0;
+      var doneB = b.completedAt || b.createdAt || b.id || 0;
+      return doneA - doneB;
+    }
+    // 3. If both are pending, preserve creation order
+    var timeA = a.createdAt || a.id || 0;
+    var timeB = b.createdAt || b.id || 0;
+    return timeA - timeB;
+  });
+}
 
 // ---------- Storage Operations ----------
 function loadHabits() {
   try {
     var saved = localStorage.getItem(STORAGE_KEY);
     habits = saved ? JSON.parse(saved) : [];
+    sortHabitsArray();
   } catch (e) {
     habits = [];
   }
@@ -144,12 +166,13 @@ function formatTime(timestamp) {
 }
 
 function getHabitTimestampText(habit) {
+  var editedSuffix = habit.updatedAt ? " • edited" : "";
   if (habit.done && habit.completedAt) {
-    return "Completed at " + formatTime(habit.completedAt);
+    return "Completed at " + formatTime(habit.completedAt) + editedSuffix;
   }
   var created = habit.createdAt || habit.id;
   if (created) {
-    return "Added at " + formatTime(created);
+    return "Added at " + formatTime(created) + editedSuffix;
   }
   return "";
 }
@@ -162,15 +185,22 @@ function addHabit() {
   if (text === "") return;
 
   var now = Date.now();
+  var maxId = habits.reduce(function (max, h) {
+    return typeof h.id === "number" && h.id > max ? h.id : max;
+  }, 0);
+  var uniqueTimestamp = now > maxId ? now : maxId + 1;
+
   habits.push({
-    id: now,
+    id: uniqueTimestamp,
     text: text,
     done: false,
-    createdAt: now,
+    createdAt: uniqueTimestamp,
     completedAt: null
   });
 
+  editingHabitId = null;
   input.value = "";
+  sortHabitsArray();
   saveHabits();
   render();
 }
@@ -183,11 +213,15 @@ function toggleDone(id) {
       break;
     }
   }
+  sortHabitsArray();
   saveHabits();
   render();
 }
 
 function deleteHabit(id) {
+  if (editingHabitId === id) {
+    editingHabitId = null;
+  }
   habits = habits.filter(function (habit) {
     return habit.id !== id;
   });
@@ -195,8 +229,45 @@ function deleteHabit(id) {
   render();
 }
 
+// ---------- Habit Editing Actions ----------
+function startEdit(id) {
+  editingHabitId = id;
+  render();
+}
+
+function cancelEdit() {
+  editingHabitId = null;
+  render();
+}
+
+function saveEdit(id) {
+  var input = document.getElementById("editInput_" + id);
+  if (!input) return;
+  var newText = input.value.trim();
+  if (newText === "") {
+    input.classList.add("input-error");
+    input.focus();
+    return;
+  }
+
+  for (var i = 0; i < habits.length; i++) {
+    if (habits[i].id === id) {
+      if (habits[i].text !== newText) {
+        habits[i].text = newText;
+        habits[i].updatedAt = Date.now();
+      }
+      break;
+    }
+  }
+
+  editingHabitId = null;
+  saveHabits();
+  render();
+}
+
 function setFilter(filter) {
   currentFilter = filter;
+  editingHabitId = null;
   var tabButtons = document.querySelectorAll(".tab-btn");
   tabButtons.forEach(function (btn) {
     var isActive = btn.getAttribute("data-filter") === filter;
@@ -304,8 +375,9 @@ function render() {
 
   // Render habit items
   filteredHabits.forEach(function (habit) {
+    var isEditing = editingHabitId === habit.id;
     var li = document.createElement("li");
-    li.className = "habit-item" + (habit.done ? " is-done" : "");
+    li.className = "habit-item" + (habit.done ? " is-done" : "") + (isEditing ? " is-editing" : "");
 
     // Circular check button
     var checkBtn = document.createElement("button");
@@ -313,56 +385,154 @@ function render() {
     checkBtn.className = "habit-check-btn";
     checkBtn.setAttribute("aria-label", habit.done ? "Mark as to-do" : "Mark as completed");
     checkBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 7.5 5.5 10.5 11.5 3.5"></polyline></svg>';
-    checkBtn.onclick = function () {
-      toggleDone(habit.id);
-    };
 
-    // Habit content container (text + timestamp)
-    var contentWrapper = document.createElement("div");
-    contentWrapper.className = "habit-content";
+    if (isEditing) {
+      checkBtn.disabled = true;
+      checkBtn.setAttribute("tabindex", "-1");
+    } else {
+      checkBtn.onclick = function () {
+        toggleDone(habit.id);
+      };
+    }
 
-    var span = document.createElement("span");
-    span.className = "habit-text";
-    span.textContent = habit.text;
+    if (isEditing) {
+      // Editing Form Mode
+      var editForm = document.createElement("form");
+      editForm.className = "habit-edit-form";
+      editForm.onsubmit = function (e) {
+        e.preventDefault();
+        saveEdit(habit.id);
+      };
 
-    var timestampSpan = document.createElement("span");
-    timestampSpan.className = "habit-timestamp";
-    timestampSpan.textContent = getHabitTimestampText(habit);
+      var editInput = document.createElement("input");
+      editInput.type = "text";
+      editInput.id = "editInput_" + habit.id;
+      editInput.className = "habit-edit-input";
+      editInput.value = habit.text;
+      editInput.maxLength = 70;
+      editInput.autocomplete = "off";
+      editInput.spellcheck = false;
+      editInput.setAttribute("aria-label", "Edit habit title");
 
-    contentWrapper.appendChild(span);
-    contentWrapper.appendChild(timestampSpan);
+      editInput.onkeydown = function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          saveEdit(habit.id);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          cancelEdit();
+        }
+      };
 
-    // Action buttons container
-    var actions = document.createElement("div");
-    actions.className = "habit-actions";
+      editInput.oninput = function () {
+        if (editInput.classList.contains("input-error")) {
+          editInput.classList.remove("input-error");
+        }
+      };
 
-    // Text status toggle button
-    var toggleBtn = document.createElement("button");
-    toggleBtn.type = "button";
-    toggleBtn.className = "btn btn-toggle";
-    toggleBtn.textContent = habit.done ? "Undo" : "Done";
-    toggleBtn.onclick = function () {
-      toggleDone(habit.id);
-    };
+      editForm.appendChild(editInput);
 
-    // Delete button
-    var delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.className = "btn btn-delete";
-    delBtn.textContent = "Delete";
-    delBtn.setAttribute("aria-label", "Delete habit");
-    delBtn.onclick = function () {
-      deleteHabit(habit.id);
-    };
+      // Edit action buttons (Save / Cancel)
+      var editActions = document.createElement("div");
+      editActions.className = "habit-actions";
 
-    actions.appendChild(toggleBtn);
-    actions.appendChild(delBtn);
+      var saveBtn = document.createElement("button");
+      saveBtn.type = "button";
+      saveBtn.className = "btn btn-save";
+      saveBtn.textContent = "Save";
+      saveBtn.setAttribute("aria-label", "Save habit changes");
+      saveBtn.onclick = function () {
+        saveEdit(habit.id);
+      };
 
-    li.appendChild(checkBtn);
-    li.appendChild(contentWrapper);
-    li.appendChild(actions);
+      var cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.className = "btn btn-cancel";
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.setAttribute("aria-label", "Cancel editing");
+      cancelBtn.onclick = function () {
+        cancelEdit();
+      };
+
+      editActions.appendChild(saveBtn);
+      editActions.appendChild(cancelBtn);
+
+      li.appendChild(checkBtn);
+      li.appendChild(editForm);
+      li.appendChild(editActions);
+    } else {
+      // Standard Display Mode: content container (text + timestamp)
+      var contentWrapper = document.createElement("div");
+      contentWrapper.className = "habit-content";
+
+      var span = document.createElement("span");
+      span.className = "habit-text";
+      span.textContent = habit.text;
+      span.title = "Double-click to edit";
+      span.ondblclick = function () {
+        startEdit(habit.id);
+      };
+
+      var timestampSpan = document.createElement("span");
+      timestampSpan.className = "habit-timestamp";
+      timestampSpan.textContent = getHabitTimestampText(habit);
+
+      contentWrapper.appendChild(span);
+      contentWrapper.appendChild(timestampSpan);
+
+      // Action buttons container
+      var actions = document.createElement("div");
+      actions.className = "habit-actions";
+
+      // Text status toggle button
+      var toggleBtn = document.createElement("button");
+      toggleBtn.type = "button";
+      toggleBtn.className = "btn btn-toggle";
+      toggleBtn.textContent = habit.done ? "Undo" : "Done";
+      toggleBtn.onclick = function () {
+        toggleDone(habit.id);
+      };
+
+      // Edit button
+      var editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "btn btn-edit";
+      editBtn.textContent = "Edit";
+      editBtn.setAttribute("aria-label", "Edit habit");
+      editBtn.onclick = function () {
+        startEdit(habit.id);
+      };
+
+      // Delete button
+      var delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "btn btn-delete";
+      delBtn.textContent = "Delete";
+      delBtn.setAttribute("aria-label", "Delete habit");
+      delBtn.onclick = function () {
+        deleteHabit(habit.id);
+      };
+
+      actions.appendChild(toggleBtn);
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+
+      li.appendChild(checkBtn);
+      li.appendChild(contentWrapper);
+      li.appendChild(actions);
+    }
+
     list.appendChild(li);
   });
+
+  // Automatically focus and select input when in editing mode
+  if (editingHabitId !== null) {
+    var activeInput = document.getElementById("editInput_" + editingHabitId);
+    if (activeInput) {
+      activeInput.focus();
+      activeInput.select();
+    }
+  }
 
   // Calculate statistics
   var total = habits.length;
